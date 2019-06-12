@@ -1,0 +1,2 @@
+Question2(Minimax) exploration: Note that Pacman will have suicidal tendencies when playing in situations where death is imminent. Why do you think this is the case?
+    Answer:     
