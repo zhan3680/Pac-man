@@ -1,2 +1,4 @@
 Question2(Minimax) exploration: Note that Pacman will have suicidal tendencies when playing in situations where death is imminent. Why do you think this is the case?
-    Answer:     
+    Answer: Since minimax strategy is used, Pacman, which is the Max node, will always try to maximize its score. When death is imminet, the Pacman can not avoid being caught by the Ghost anyway, 
+    as the ghost will also play optimally (in this case, to catch the Pacman), so the 500 points loss due to ghost will be fixed, therefore the optimal choice is to "suicide" to minimize the loss of
+    score due to timing (the score keeps decreasing as the game proceeds).

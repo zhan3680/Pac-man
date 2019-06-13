@@ -159,14 +159,19 @@ class MinimaxAgent(MultiAgentSearchAgent):
     """
     def DFminimax(self, state, player_turn_index):
         best_move = None
-        cur_depth = player_turn_index/state.getNumAgents()
+        cur_depth = player_turn_index/state.getNumAgents() + 1
+        player_index = player_turn_index % state.getNumAgents()
 
-        #base case: reach a leave or depth-bound has been reach
-        if state.isLose() or state.isWin() or cur_depth == self.depth:
+        #base case: reach a leave or depth-bound has been reached
+        if state.isLose() or state.isWin() or (cur_depth > self.depth and player_index == 0):
+            # if not (state.isLose() or state.isWin()):
+            #      print("depth bound: {}\n".format(self.depth))
+            #      print("number of agent: {}\n".format(state.getNumAgents()))
+            #      print("current depth: {}\n".format(cur_depth))
+            #      print("player index: {}\n".format(player_index))
             return best_move, self.evaluationFunction(state)
 
         #induction step:
-        player_index = player_turn_index % state.getNumAgents()
         current_value = 0
         if player_index == 0: #Max node
             current_value -= float('inf')
