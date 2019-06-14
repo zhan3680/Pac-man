@@ -21,4 +21,9 @@ Question4 --- Expectimax
     
      The induction proof tells us that in depth 1 where the root node lies, all of its children in expectimax tree have higher or equal values than the corresponding min nodes in minimax tree, since root node 
      only picks the max amon its children, the root node of the expectimax tree will have higher or equal value than the root node of a similar minimax tree, in other words VE >= VM.
- (1b)
+ 
+ (1b)Answer: True. If we first change all the min nodes to chance nodes and then apply minimax policy to all the chance nodesm, then we are getting exactly the same tree as the initial minimax tree, because
+     the only difference between a min node and a chance node is how they calculate the utility value at that state. Therefore, the payoff in this scenario will be VM.
+
+ (1c)Answer: False. According to part(1b), the payoff in this scenario will be VM, and according to part(1a), VM  <= VE, so we are not guaranteed to get a payoff of at least VE.
+ 
