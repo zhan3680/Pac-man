@@ -164,11 +164,6 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
         #base case: reach a leave or depth-bound has been reached
         if state.isLose() or state.isWin() or (cur_depth > self.depth and player_index == 0):
-            # if not (state.isLose() or state.isWin()):
-            #      print("depth bound: {}\n".format(self.depth))
-            #      print("number of agent: {}\n".format(state.getNumAgents()))
-            #      print("current depth: {}\n".format(cur_depth))
-            #      print("player index: {}\n".format(player_index))
             return best_move, self.evaluationFunction(state)
 
         #induction step:
@@ -180,14 +175,14 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
         for action in state.getLegalActions(player_index):
             new_state = state.generateSuccessor(player_index, action)
-            move, child_value = self.DFminimax(new_state, player_turn_index+1)
+            child_move, child_return = self.DFminimax(new_state, player_turn_index+1)
             if player_index == 0: #pacman, i.e Max
-                if child_value > current_value:
-                    current_value = child_value
+                if child_return > current_value:
+                    current_value = child_return
                     best_move = action
             else: #ghost, i.e Min
-                if child_value < current_value:
-                    current_value = child_value
+                if child_return < current_value:
+                    current_value = child_return
                     best_move = action
 
         return best_move, current_value
@@ -210,7 +205,6 @@ class MinimaxAgent(MultiAgentSearchAgent):
             Returns the total number of agents in the game
         """
         "*** YOUR CODE HERE ***"
-
         action, utility_for_pacman = self.DFminimax(gameState, 0)
         return action
 
@@ -220,18 +214,95 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
       Your minimax agent with alpha-beta pruning (question 3)
     """
 
+    def __init__(self, evalFn="scoreEvaluationFunction", depth = "2"):
+        MultiAgentSearchAgent.__init__(self, evalFn, depth)
+
+    '''
+    returns the best move as well as the minimax value with pruning
+    '''
+    def AlphaBeta(self, state, player_turn_index, alpha, beta):
+        best_move = None
+        cur_depth = player_turn_index/state.getNumAgents() + 1
+        player_index = player_turn_index % state.getNumAgents()
+
+        #base case: reach a leave or depth-bound has been reached
+        if state.isLose() or state.isWin() or (cur_depth > self.depth and player_index == 0):
+            return best_move, self.evaluationFunction(state)
+
+        #induction step
+        for action in state.getLegalActions(player_index):
+            new_state = state.generateSuccessor(player_index, action)
+            child_move, child_return = self.AlphaBeta(new_state, player_turn_index+1, alpha, beta)
+            if player_index == 0: #pacman, i.e Max
+                if child_return > alpha:
+                    alpha = child_return
+                    best_move = action
+                    if alpha >= beta:
+                        break
+            else: #ghost, i.e Min
+                if child_return < beta:
+                    beta = child_return
+                    best_move = action
+                    if alpha >= beta:
+                        break
+
+        if player_index == 0: #pacman, i.e Max
+            return best_move, alpha
+        else: #ghost, i.e Min
+            return best_move, beta
+
+
     def getAction(self, gameState):
         """
-          Returns the minimax action using self.depth and self.evaluationFunction
+          Returns the minimax action based on minimax with alpha-beta pruning
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        action, utility_for_pacman = self.AlphaBeta(gameState, 0, -float('inf'), float('inf'))
+        return action
 
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
       Your expectimax agent (question 4)
     """
+
+    def __init__(self, evalFn="scoreEvaluationFunction", depth = "2"):
+        MultiAgentSearchAgent.__init__(self, evalFn, depth)
+
+    '''
+    returns the best move(only for Pacman(Max)) as well as the expectimax value
+    '''
+    def Expectimax(self, state, player_turn_index):
+        best_move = None
+        cur_depth = player_turn_index/state.getNumAgents() + 1
+        player_index = player_turn_index % state.getNumAgents()
+
+        #base case: reach a leave or depth-bound has been reached
+        if state.isLose() or state.isWin() or (cur_depth > self.depth and player_index == 0):
+            return best_move, self.evaluationFunction(state)
+
+        #induction step
+        count = 0
+        current_value = 0
+        if player_index == 0: #Max node
+            current_value -= float('inf')
+
+        for action in state.getLegalActions(player_index):
+            new_state = state.generateSuccessor(player_index, action)
+            child_move, child_return = self.Expectimax(new_state, player_turn_index+1)
+            if player_index == 0: #pacman, i.e Max
+                if child_return > current_value:
+                    current_value = child_return
+                    best_move = action
+            else: #ghost, i.e Min
+                count += 1
+                current_value += child_return
+
+        if player_index == 0: #pacman, i.e Max
+            return best_move, current_value
+        else: #ghost, i.e Min
+            return best_move, float(current_value)/float(count)
+
 
     def getAction(self, gameState):
         """
@@ -241,7 +312,8 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
           legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        action, utility_for_pacman = self.Expectimax(gameState, 0)
+        return action
 
 
 def betterEvaluationFunction(currentGameState):

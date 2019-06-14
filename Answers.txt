@@ -1,4 +1,24 @@
-Question2(Minimax) exploration: Note that Pacman will have suicidal tendencies when playing in situations where death is imminent. Why do you think this is the case?
+Question2 --- Minimax: 
     Answer: Since minimax strategy is used, Pacman, which is the Max node, will always try to maximize its score. When death is imminet, the Pacman can not avoid being caught by the Ghost anyway, 
     as the ghost will also play optimally (in this case, to catch the Pacman), so the 500 points loss due to ghost will be fixed, therefore the optimal choice is to "suicide" to minimize the loss of
     score due to timing (the score keeps decreasing as the game proceeds).
+
+Question3 --- Minimax with alpha-beta pruning:
+ (1a)Answer: In the best case scenario, alpha-beta pruning agent will be able to search to a depth of 2*d, given the same amount of time as minimax agent.
+ (1b)Answer: In the worst case scenario, alpha-beta pruning agent will be able to search to a depth of d, given the same amount of time as minimax agent. In this scenario, no pruning will happen and 
+     alpha-beta will perform exactly the same as minimax without pruning.
+ (2) Answer: False. Reason for this is that although values for some internal nodes in alpha-beta tree might be altered by pruning, pruning only happens when we are certain that parent of the current 
+     node already has a better choice and thus won't pick the current node as its move, from which we can conclude that all the "altered" nodes in the tree in the tree will not have no influence on
+     their parents. Therefore, applying alpha-beta pruning to a game tree will not alter the minimax value of the root node. (compared with the game tree generated using minimax without pruning)
+
+Question4 --- Expectimax
+ (1a)Answer: True. We can prove this by a simple induction on depth. Let p(n) be defined as: all chance nodes in the first layer in depth n in expectimax tree have higher or equal values than the corresponding
+     min nodes in minimax tree. Base case: Let d be the depth limit, since the terminal values are the same, all possible chance nodes in last layer in depth d in expectimax tree will have higher or equal
+     values than the corresponding min nodes in minimax tree (the average value is surely larger than the least), thus so will all chance nodes in the first layer in depth d, so p(d). Induction hypothesis:
+     let 0<k<=d, assume p(k). Induction step: want to prove p(k-1) here. By induction hypothesis, all chance nodes in the first layer in depth k in expectimax tree have higher or equal values than the    
+     corresponding min nodes in minimax tree, so their parents, all the max nodes in depth k will also have higher or equal value, since they only pick the largest from children. We can treat the values for 
+     all max nodes in depth k as the "terminal values" for nodes in depth k-1, therefore the argument in base case again applies and we can conclude p(k-1).
+    
+     The induction proof tells us that in depth 1 where the root node lies, all of its children in expectimax tree have higher or equal values than the corresponding min nodes in minimax tree, since root node 
+     only picks the max amon its children, the root node of the expectimax tree will have higher or equal value than the root node of a similar minimax tree, in other words VE >= VM.
+ (1b)
