@@ -343,40 +343,38 @@ def adjusted_min(list):
 
 #return the minimum number of walls the pacman will encounter from coord1 to coord2, following a L-shaped path
 def wall_count(walls, pacman, food):
-    count1 = 0
-    count2 = 0
+    count1 = 0 #first move horizontally, then move vertically
+    count2 = 0 #first move vertically, then move horizontally
+    x_step = 0
+    y_step = 0
+    if food[0] != pacman[0]:
+        x_step = (food[0] - pacman[0]) / abs(food[0] - pacman[0])
+    if food[1] != pacman[1]:
+        y_step = (food[1] - pacman[1])/abs(food[1] - pacman[1])
 
-    if pacman[0] < food[0]: #case1
-        if pacman[1] == food[1]:
-            for x in range(pacman[0]+1, food[0]):
-                if walls[x][pacman[1]]:
-                    count1 += 1
-            return count1
-        elif pacman[1] < food[1]:
-            for x1 in range(pacman[0]+1, food[0]):
-                if walls[x1][pacman[1]]:
-                    count1 += 1
-                if walls[x1][food[1]]:
-                    count2 += 1
-            for y1 in range(pacman[0]+1, food[1]):
-                if walls[food[0]][y1]:
-                    count1 += 1
-                if walls[pacman[0]][y1]:
-                    count2 += 1
-            if walls[food[0]][pacman[1]]:
+    if x_step != 0:
+        for x in range(pacman[0], food[0], x_step):
+            if walls[x][pacman[1]]:
                 count1 += 1
-            if walls[pacman[0]][food[1]]:
+            if walls[x][food[1]]:
                 count2 += 1
-        else:
-            for x2 in range(pacman[0]+1)
-
-
-        #simpler version: x_step = (food[0] - pacman[0])/abs(food[0] - pacman[0]), similar for y_step. for x in range(pacman[0] + 1, food[0], step)
-        #count1: first change x, then y; c2:first cahnge y, then x
-
+    if y_step != 0:
+        for y in range(pacman[1], food[1], y_step):
+            if walls[food[0]][y]:
+                count1 += 1
+            if walls[pacman[0]][y]:
+                count2 += 1
+    if x_step != 0 and y_step != 0:
+        if walls[food[0]][pacman[1]]:
+            count1 += 1
+        if walls[pacman[0]][food[1]]:
+            count2 += 1
 
     return min(count1, count2)
 
+
+#revision: try best to use the same: either multiplication or devision, for score updation!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#potential revision: treat capsules as normal food??????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
 def betterEvaluationFunction(currentGameState):
     """
       Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
@@ -385,10 +383,9 @@ def betterEvaluationFunction(currentGameState):
       DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    score = 10000
+    score = 0
     pacman_pos = currentGameState.getPacmanPosition()
     food_pos = currentGameState.getFood().asList()
-    food_dis = [manhattanDistance(pacman_pos, food) for food in food_pos]
     ghost_pos = currentGameState.getGhostPositions()
     ghost_dis = [manhattanDistance(pacman_pos, ghost) for ghost in ghost_pos]
     ghost_states = currentGameState.getGhostStates()
@@ -397,54 +394,60 @@ def betterEvaluationFunction(currentGameState):
 
     #first priority: comsume food whenever safe
     num_food_left = currentGameState.getNumFood()
-    score -= 5000*num_food_left
+    score -= 50*num_food_left
 
     #tendency of pacman should be moving towards the nearest food
-    # walls = currentGameState.getWalls()
-    # adjusted_max_manhatten = (walls.width + walls.height)/2
-    if adjusted_min(food_dis) != 0:
-        score = float(score) + (float(1000)/float(adjusted_min(food_dis))
+    walls = currentGameState.getWalls()
+    max_manhatten = walls.width + walls.height
+    if len(food_pos) != 0:
+        min_food_dis = float('inf')
+        closest_food_pos = None
+        for food_coord in food_pos:
+            cur_food_dis = manhattanDistance(pacman_pos, food_coord)
+            if cur_food_dis < min_food_dis:
+                min_food_dis = cur_food_dis
+                closest_food_pos = food_coord
+        if min_food_dis != 0:
+            score -= 10*(min_food_dis/max_manhatten)
 
-    #!!!!!!!!!!!!!!!!!!!!!!!!!!revision: try best to use the same: either multiplication or devision, for score updation!!!!!!!!!!!!!!!!!
-
-
-    #!!!!!!!!!!!!!!!!!!!!!!!!!!revision: keep track of coord of closest food, and count walls in between
-    #score += 3000/num_walls, if num_walls == 0, score += 4000
-
+            #consider number of walls that lies in the way from pacman to food, if we choose the L-shaped route
+            if closest_food_pos:
+                num_walls = wall_count(currentGameState.getWalls(), pacman_pos, closest_food_pos)
+                score -= 30*(num_walls/min_food_dis)
+            else:
+                print("something is wrong when clculating closest food position!\n")
 
     #if the pacman is vulnerable, try to escape from the ghost, especially when ghost(s) are close
-    if invulnerable == 0: #vulnerable
+    if invulnerable == 0:
         min_ghost_dis = adjusted_min(ghost_dis)
         avg_ghost_dis = avg(ghost_dis)
         if min_ghost_dis <=2 :
-            score = float(score) - weighted_reciprocal(float('inf'), min_ghost_dis, avg_ghost_dis)
+            score -= float('inf')
         #else:
             #score = float(score) - weighted_reciprocal(2000, min_ghost_dis, avg_ghost_dis)
 
         # only consume a capsule when a ghost is approachable within scared time
-        # if min_ghost_dis < (40/2): #SCARED_TIME = 40, PACMAN_SPEED = 1.0, GHOST_SPEED = 1.0/2.0   #potential revision: treat capsules as normal food?
+        # if min_ghost_dis < (40/2): #SCARED_TIME = 40, PACMAN_SPEED = 1.0, GHOST_SPEED = 1.0/2.0
         capsule_pos = currentGameState.getCapsules()
-        capsule_dis = [manhattanDistance(pacman_pos, capsule) for capsule in capsule_pos]
-        min_capsule_distance = adjusted_min(capsule_dis)
+        #capsule_dis = [manhattanDistance(pacman_pos, capsule) for capsule in capsule_pos]
+        #min_capsule_distance = adjusted_min(capsule_dis)
         #     if adjusted_min(food_dis) < min_capsule_distance:
-        if min_capsule_distance != 0:
-            score = float(score) + float(5000)/float(min_capsule_distance)
-        score = float(score) - 5000*len(capsule_pos)
+        score = float(score) - 50*len(capsule_pos)
 
-    # else: #if invulnerable, then chase the closest scared ghost (still need to watch out for ghosts that has been caught
-    #       #once and are thus not scared anymore)
-    #     scared_ghost_pos = [ghost_state.getPosition() for ghost_state in ghost_states if ghost_state.scaredTimer > 0]
-    #     attacking_ghost_pos = [ghost_state.getPosition() for ghost_state in ghost_states if ghost_state.scaredTimer == 0]
-    #     scared_ghost_dis = [manhattanDistance(pacman_pos, ghost) for ghost in scared_ghost_pos]
-    #     attacking_ghost_dis = [manhattanDistance(pacman_pos, ghost) for ghost in attacking_ghost_pos]
-    #     min_scared_ghost_dis = adjusted_min(scared_ghost_dis)
-    #     min_attacking_ghost_dis = adjusted_min(attacking_ghost_dis)
-    #     avg_attacking_ghost_dis = avg(attacking_ghost_dis)
-    #     score = float(score) - weighted_reciprocal(5000, min_attacking_ghost_dis, avg_attacking_ghost_dis)
-    #
-    #     #only chase closest ghost when it is approachable within the scared time rest
-    #     if min_scared_ghost_dis < (invulnerable/3):
-    #         score = float(score) + float(2000)*(float(1)/float(min_scared_ghost_dis))
+    else: #if invulnerable, then chase the closest scared ghost (still need to watch out for ghosts that has been caught
+          #once and are thus not scared anymore)
+          scared_ghost_pos = [ghost_state.getPosition() for ghost_state in ghost_states if ghost_state.scaredTimer > 0]
+          attacking_ghost_pos = [ghost_state.getPosition() for ghost_state in ghost_states if ghost_state.scaredTimer == 0]
+          scared_ghost_dis = [manhattanDistance(pacman_pos, ghost) for ghost in scared_ghost_pos]
+          attacking_ghost_dis = [manhattanDistance(pacman_pos, ghost) for ghost in attacking_ghost_pos]
+          min_scared_ghost_dis = adjusted_min(scared_ghost_dis)
+          min_attacking_ghost_dis = adjusted_min(attacking_ghost_dis)
+          if min_attacking_ghost_dis <= 2:
+              score -= float('inf')
+
+          #only chase closest ghost when it is approachable within the scared time rest
+          if min_scared_ghost_dis < (invulnerable/3):
+              score -= 200*min_scared_ghost_dis
 
     return score
 
@@ -453,4 +456,5 @@ def betterEvaluationFunction(currentGameState):
 better = betterEvaluationFunction
 
 if __name__ == '__main__':
-    print(1/3)
+    for i in range(10,1,-1):
+        print(i)
