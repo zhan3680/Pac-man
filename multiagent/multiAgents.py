@@ -373,8 +373,6 @@ def wall_count(walls, pacman, food):
     return min(count1, count2)
 
 
-#revision: try best to use the same: either multiplication or devision, for score updation!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#potential revision: treat capsules as normal food??????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
 def betterEvaluationFunction(currentGameState):
     """
       Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
@@ -384,8 +382,14 @@ def betterEvaluationFunction(currentGameState):
     """
     "*** YOUR CODE HERE ***"
     score = 0
+    if currentGameState.isWin():
+        score += 200000
+    if currentGameState.isLose():
+        score -= 200000
+
     pacman_pos = currentGameState.getPacmanPosition()
     food_pos = currentGameState.getFood().asList()
+    food_dis = [manhattanDistance(pacman_pos, food) for food in food_pos]
     ghost_pos = currentGameState.getGhostPositions()
     ghost_dis = [manhattanDistance(pacman_pos, ghost) for ghost in ghost_pos]
     ghost_states = currentGameState.getGhostStates()
@@ -394,45 +398,34 @@ def betterEvaluationFunction(currentGameState):
 
     #first priority: comsume food whenever safe
     num_food_left = currentGameState.getNumFood()
-    score -= 50*num_food_left
+    score -= 500*num_food_left
 
     #tendency of pacman should be moving towards the nearest food
     walls = currentGameState.getWalls()
-    max_manhatten = walls.width + walls.height
-    if len(food_pos) != 0:
-        min_food_dis = float('inf')
-        closest_food_pos = None
-        for food_coord in food_pos:
-            cur_food_dis = manhattanDistance(pacman_pos, food_coord)
-            if cur_food_dis < min_food_dis:
-                min_food_dis = cur_food_dis
-                closest_food_pos = food_coord
-        if min_food_dis != 0:
-            score -= 10*(min_food_dis/max_manhatten)
+    max_manhatten = walls.height + walls.height
+    score -= 20 * avg(food_dis)
+    score -= (500/max_manhatten)*adjusted_min(food_dis)
 
-            #consider number of walls that lies in the way from pacman to food, if we choose the L-shaped route
-            if closest_food_pos:
-                num_walls = wall_count(currentGameState.getWalls(), pacman_pos, closest_food_pos)
-                score -= 30*(num_walls/min_food_dis)
-            else:
-                print("something is wrong when clculating closest food position!\n")
+    #consider number of walls that lies in the way from pacman to food, if we choose the L-shaped route
+    # if closest_food_pos:
+    #     num_walls = wall_count(currentGameState.getWalls(), pacman_pos, closest_food_pos)
+    #     score -= 20*num_walls
 
     #if the pacman is vulnerable, try to escape from the ghost, especially when ghost(s) are close
     if invulnerable == 0:
+        #take care of ghost
         min_ghost_dis = adjusted_min(ghost_dis)
         avg_ghost_dis = avg(ghost_dis)
-        if min_ghost_dis <=2 :
-            score -= float('inf')
-        #else:
-            #score = float(score) - weighted_reciprocal(2000, min_ghost_dis, avg_ghost_dis)
+        if min_ghost_dis <= 2:
+            score -= 1000000
 
         # only consume a capsule when a ghost is approachable within scared time
-        # if min_ghost_dis < (40/2): #SCARED_TIME = 40, PACMAN_SPEED = 1.0, GHOST_SPEED = 1.0/2.0
+        #if min_ghost_dis < (40/2): #SCARED_TIME = 40, PACMAN_SPEED = 1.0, GHOST_SPEED = 1.0/2.0
         capsule_pos = currentGameState.getCapsules()
-        #capsule_dis = [manhattanDistance(pacman_pos, capsule) for capsule in capsule_pos]
-        #min_capsule_distance = adjusted_min(capsule_dis)
-        #     if adjusted_min(food_dis) < min_capsule_distance:
-        score = float(score) - 50*len(capsule_pos)
+        capsule_dis = [manhattanDistance(pacman_pos, capsule) for capsule in capsule_pos]
+        min_capsule_distance = adjusted_min(capsule_dis)
+        score -= 1000*len(capsule_pos)
+        #score -= (500/max_manhatten)*min_capsule_distance
 
     else: #if invulnerable, then chase the closest scared ghost (still need to watch out for ghosts that has been caught
           #once and are thus not scared anymore)
@@ -443,14 +436,19 @@ def betterEvaluationFunction(currentGameState):
           min_scared_ghost_dis = adjusted_min(scared_ghost_dis)
           min_attacking_ghost_dis = adjusted_min(attacking_ghost_dis)
           if min_attacking_ghost_dis <= 2:
-              score -= float('inf')
+              score -= 1000000
 
           #only chase closest ghost when it is approachable within the scared time rest
           if min_scared_ghost_dis < (invulnerable/3):
-              score -= 200*min_scared_ghost_dis
+              score -= 2000*(min_scared_ghost_dis/max_manhatten)
 
+    # if currentGameState.getNumFood() == 0:
+    #     print("in a state where no food is left\n")
+    #     if currentGameState.isWin:
+    #         print(score)
+    #     else:
+    #         print("why not winning?\n")
     return score
-
 
 # Abbreviation
 better = betterEvaluationFunction
