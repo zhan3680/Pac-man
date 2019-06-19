@@ -324,15 +324,11 @@ def avg(list):
         return sum(list)/len(list)
 
 #calculated weighted reciprocal
-def weighted_reciprocal(weight, a, b):
-    if a != 0 and b != 0:
-        return float(weight)*(float(1)/float(a) + float(1)/float(b))
-    elif a != 0:
-        return float(weight)*(float(1)/float(a))
-    elif b != 0:
-        return float(weight)*(float(1)/float(b))
-    else:
+def weighted_reciprocal(weight, feature):
+    if feature == 0:
         return 0
+    else:
+        return float(weight)/float(weight)
 
 #adjusted min that can handle empty lists
 def adjusted_min(list):
@@ -403,19 +399,14 @@ def betterEvaluationFunction(currentGameState):
     #tendency of pacman should be moving towards the nearest food
     walls = currentGameState.getWalls()
     max_manhatten = walls.height + walls.height
-    score -= 20 * avg(food_dis)
     score -= (500/max_manhatten)*adjusted_min(food_dis)
-
-    #consider number of walls that lies in the way from pacman to food, if we choose the L-shaped route
-    # if closest_food_pos:
-    #     num_walls = wall_count(currentGameState.getWalls(), pacman_pos, closest_food_pos)
-    #     score -= 20*num_walls
+    if currentGameState.getNumFood() > 5:
+        score -= 20 * avg(food_dis)
 
     #if the pacman is vulnerable, try to escape from the ghost, especially when ghost(s) are close
     if invulnerable == 0:
         #take care of ghost
         min_ghost_dis = adjusted_min(ghost_dis)
-        avg_ghost_dis = avg(ghost_dis)
         if min_ghost_dis <= 2:
             score -= 1000000
 
@@ -423,9 +414,7 @@ def betterEvaluationFunction(currentGameState):
         #if min_ghost_dis < (40/2): #SCARED_TIME = 40, PACMAN_SPEED = 1.0, GHOST_SPEED = 1.0/2.0
         capsule_pos = currentGameState.getCapsules()
         capsule_dis = [manhattanDistance(pacman_pos, capsule) for capsule in capsule_pos]
-        min_capsule_distance = adjusted_min(capsule_dis)
-        score -= 1000*len(capsule_pos)
-        #score -= (500/max_manhatten)*min_capsule_distance
+        score -= 1000000*len(capsule_pos)
 
     else: #if invulnerable, then chase the closest scared ghost (still need to watch out for ghosts that has been caught
           #once and are thus not scared anymore)
@@ -442,17 +431,11 @@ def betterEvaluationFunction(currentGameState):
           if min_scared_ghost_dis < (invulnerable/3):
               score -= 2000*(min_scared_ghost_dis/max_manhatten)
 
-    # if currentGameState.getNumFood() == 0:
-    #     print("in a state where no food is left\n")
-    #     if currentGameState.isWin:
-    #         print(score)
-    #     else:
-    #         print("why not winning?\n")
-    return score
+    return score + 36*currentGameState.getScore()
 
 # Abbreviation
 better = betterEvaluationFunction
 
 if __name__ == '__main__':
-    for i in range(10,1,-1):
-        print(i)
+    #last update
+    pass
