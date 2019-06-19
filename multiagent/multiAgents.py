@@ -410,8 +410,7 @@ def betterEvaluationFunction(currentGameState):
         if min_ghost_dis <= 2:
             score -= 1000000
 
-        # only consume a capsule when a ghost is approachable within scared time
-        #if min_ghost_dis < (40/2): #SCARED_TIME = 40, PACMAN_SPEED = 1.0, GHOST_SPEED = 1.0/2.0
+        #eat capsule to become invulnerable
         capsule_pos = currentGameState.getCapsules()
         score -= 1000000*len(capsule_pos)
 
@@ -436,5 +435,5 @@ def betterEvaluationFunction(currentGameState):
 better = betterEvaluationFunction
 
 if __name__ == '__main__':
-    #last update
+    #last update: 2016-06-18 9:05
     pass
