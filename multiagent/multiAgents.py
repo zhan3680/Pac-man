@@ -413,7 +413,6 @@ def betterEvaluationFunction(currentGameState):
         # only consume a capsule when a ghost is approachable within scared time
         #if min_ghost_dis < (40/2): #SCARED_TIME = 40, PACMAN_SPEED = 1.0, GHOST_SPEED = 1.0/2.0
         capsule_pos = currentGameState.getCapsules()
-        capsule_dis = [manhattanDistance(pacman_pos, capsule) for capsule in capsule_pos]
         score -= 1000000*len(capsule_pos)
 
     else: #if invulnerable, then chase the closest scared ghost (still need to watch out for ghosts that has been caught
